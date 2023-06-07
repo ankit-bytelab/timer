@@ -6,6 +6,30 @@ import {NavigationNames} from '../../../utils/routeNames';
 const mockNavigate = jest.fn();
 const mockNavigation = {navigate: mockNavigate};
 
+jest.mock('react-native-background-timer', () => {
+  const timer = {
+    timeoutIds: [] as number[],
+    setInterval: jest.fn((fn: () => void, interval: number) => {
+      const timeoutId = setTimeout(() => {
+        timer.timeoutIds = timer.timeoutIds.filter(id => id !== timeoutId);
+        fn();
+      }, interval);
+      timer.timeoutIds.push(timeoutId);
+      return timeoutId;
+    }),
+    clearInterval: jest.fn((timeoutId: number) => {
+      clearTimeout(timeoutId);
+      timer.timeoutIds = timer.timeoutIds.filter(id => id !== timeoutId);
+    }),
+    clearAllTimeouts: jest.fn(() => {
+      timer.timeoutIds.forEach(id => clearTimeout(id));
+      timer.timeoutIds = [];
+    }),
+  };
+
+  return timer;
+});
+
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: () => mockNavigation,

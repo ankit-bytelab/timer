@@ -10,6 +10,7 @@ import {CountDownProps} from './CountDown.types';
 import {convertSecondsToTime} from '../../utils/functions/timeConverter';
 import {Swipeable} from 'react-native-gesture-handler';
 import {Pause, Play} from '../../assets/svg';
+import BackgroundTimer from 'react-native-background-timer';
 
 const RenderSwipeableAction: React.FC = () => {
   return (
@@ -25,7 +26,7 @@ const CountDown: React.FC<CountDownProps> = ({id, seconds, onRightSwipe}) => {
   const intervalref = useRef<number | null>(null);
 
   const startInterval = (): void => {
-    intervalref.current = setInterval(() => {
+    intervalref.current = BackgroundTimer.setInterval(() => {
       setCount(prevCount => prevCount - 1);
     }, 1000);
     setIsPause(false);
@@ -33,7 +34,7 @@ const CountDown: React.FC<CountDownProps> = ({id, seconds, onRightSwipe}) => {
 
   const stopInterval = (): void => {
     if (intervalref.current) {
-      clearInterval(intervalref.current);
+      BackgroundTimer.clearInterval(intervalref.current);
       intervalref.current = null;
       setIsPause(true);
     }

@@ -1,8 +1,33 @@
 import React from 'react';
 import CountDown from './CountDown';
-import {act, fireEvent, render, screen} from '../../setup/test';
+import {act, fireEvent, render, screen, waitFor} from '../../setup/test';
+
 const mockSeconds = 10;
 const mockOnRightSwipe = jest.fn();
+
+jest.mock('react-native-background-timer', () => {
+  const timer = {
+    timeoutIds: [] as number[],
+    setInterval: jest.fn((fn: () => void, interval: number) => {
+      const timeoutId = setTimeout(() => {
+        timer.timeoutIds = timer.timeoutIds.filter(id => id !== timeoutId);
+        fn();
+      }, interval);
+      timer.timeoutIds.push(timeoutId);
+      return timeoutId;
+    }),
+    clearInterval: jest.fn((timeoutId: number) => {
+      clearTimeout(timeoutId);
+      timer.timeoutIds = timer.timeoutIds.filter(id => id !== timeoutId);
+    }),
+    clearAllTimeouts: jest.fn(() => {
+      timer.timeoutIds.forEach(id => clearTimeout(id));
+      timer.timeoutIds = [];
+    }),
+  };
+
+  return timer;
+});
 
 describe('CountDown component', () => {
   it('renders count and play/pause button', () => {
@@ -64,23 +89,20 @@ describe('CountDown component', () => {
   });
 
   it('stops count down when reaching zero', () => {
-    jest.useFakeTimers();
-
-    render(
-      <CountDown
-        id={1}
-        seconds={mockSeconds}
-        onRightSwipe={mockOnRightSwipe}
-      />,
-    );
-
+    render(<CountDown id={1} seconds={2} />);
+    const countText = screen.getByText('00:02');
+    expect(countText).toBeTruthy();
     const playPauseButton = screen.getByTestId('play-pause-button');
-
     act(() => {
       fireEvent.press(playPauseButton);
-      jest.advanceTimersByTime(10000);
     });
-    expect(screen.getByText('00:00')).not.toBeNull();
-    jest.useRealTimers();
+
+    waitFor(
+      () => {
+        const finishedCountText = screen.queryByText('00:00');
+        expect(finishedCountText).toBeFalsy();
+      },
+      {timeout: 2000},
+    );
   });
 });

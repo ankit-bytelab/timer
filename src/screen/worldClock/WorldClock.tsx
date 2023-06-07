@@ -9,6 +9,7 @@ import {
 } from './WorldClock.styles';
 import {WorldClock as WorldClockIcon} from '../../assets/svg';
 import {WorldTimeZones} from './WorldClock.types';
+import BackgroundTimer from 'react-native-background-timer';
 import moment from 'moment';
 
 const {width, height} = Dimensions.get('window');
@@ -59,14 +60,14 @@ const WorldClock: React.FC = () => {
   }, []);
 
   const startTimer = useCallback((): void => {
-    intervalRef.current = setInterval(() => {
+    intervalRef.current = BackgroundTimer.setInterval(() => {
       setWorldTime(prevTime => addOneSecond(prevTime));
     }, 1000);
   }, [intervalRef, setWorldTime]);
 
   const stopTimer = useCallback((): void => {
     if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+      BackgroundTimer.clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
   }, [intervalRef]);
